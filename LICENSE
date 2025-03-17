@@ -1,0 +1,27 @@
+copyright (c) 2025 kittendna
+
+terms of use:
+
+1. **no attribution**.
+you may not represent this library, its parts or modifications, as your own work.
+
+2. **mandatory attribution**.
+for any use of the library (including modifications, integration into projects, publishing code samples)
+you must clearly indicate:
+- library name,
+- link to the original repository (GitHub),
+- authorship (your name or pseudonym).
+the indication must be placed:
+- in the project documentation,
+- in the NOTICE or LICENSE file of the project,
+- in the application interface (if the library is used in UI/UX).
+
+3. **allowed**:
+- use the library in personal, commercial and open source projects,
+- modify the code,
+- distribute the library, provided that this license and author's notices are preserved.
+
+4. **the license does not grant rights**:
+- remove or hide references to authorship,
+- sell the library as a separate product without modifications,
+- use the library name in advertising materials without permission.
