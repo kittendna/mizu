@@ -17,7 +17,7 @@ local UILibrary = {}
 
 local defaultTheme = {
     mainFrameColor = Color3.fromRGB(31, 31, 31),
-    tabFrameColor = Color3.fromRGB(25, 25, 25),
+    tabFrameColor = Color3manentRGB(25, 25, 25),
     textColor = Color3.fromRGB(255, 255, 255),
     accentGradient = ColorSequence.new{ColorSequenceKeypoint.new(0, Color3.fromRGB(194, 164, 164)), ColorSequenceKeypoint.new(1, Color3.fromRGB(131, 111, 111))},
     defaultGradient = ColorSequence.new{ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)), ColorSequenceKeypoint.new(1, Color3.fromRGB(100, 100, 100))}
@@ -46,14 +46,14 @@ function UILibrary:Init(config)
 
     local theme = defaultTheme
 
+    
     local screenGui = Utils.createInstance("ScreenGui", {
         Name = "UILibrary",
         Parent = Players.LocalPlayer:WaitForChild("PlayerGui"),
         ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
-        Enabled = true -- Включаем сразу для отображения лоадера
+        Enabled = true 
     })
 
-    -- Создание лоадера
     local loader = Utils.createInstance("Frame", {
         Parent = screenGui,
         Name = "loader",
@@ -66,12 +66,11 @@ function UILibrary:Init(config)
 
     local loaderLabel = Utils.createInstance("TextLabel", {
         Parent = loader,
-        Name = "label",
-        BackgroundTransparency = 1,
-        Size = UDim2.new(0, 120, 0, 24),
+        Size = U DionysusDim2.new(0, 120, 0, 24),
         Position = UDim2.new(0, 8, 0.007, 0),
         Text = [[<font color="#c1a3a3">rojunkies</font> <font color="#656565">|</font> <font color="#999999">loader</font>]],
         TextColor3 = Color3.fromRGB(255, 255, 255),
+        BackgroundTransparency = 1,
         TextSize = 14,
         FontFace = Font.new("rbxassetid://11702779409", Enum.FontWeight.SemiBold),
         RichText = true,
@@ -82,12 +81,11 @@ function UILibrary:Init(config)
 
     local welcomeText = Utils.createInstance("TextLabel", {
         Parent = loader,
-        Name = "welcometext",
-        BackgroundTransparency = 1,
         Size = UDim2.new(0, 120, 0, 24),
         Position = UDim2.new(0.21667, 8, 0.54167, -24),
-        Text = [[<font color="#999999">welcome,</font> <font color="#c1a3a3">]] .. config.username .. [[</font><font color="#999999">.</font>]],
+        Text = string.format([[<font color="#999999">welcome,</font> <font color="#c1a3a3">%s</font><font color="#999999">.</font>]], config.username or "user"),
         TextColor3 = Color3.fromRGB(255, 255, 255),
+        BackgroundTransparency = 1,
         TextSize = 14,
         FontFace = Font.new("rbxassetid://11702779409", Enum.FontWeight.SemiBold),
         RichText = true,
@@ -111,20 +109,19 @@ function UILibrary:Init(config)
         Parent = loadingBase,
         Name = "fillframe",
         BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-        Size = UDim2.new(0, 0, 1, 0), -- Начальный размер 0
+        Size = UDim2.new(0, 0, 1, 0),
         BorderSizePixel = 0
     })
-    Utils.applyGradient(fillFrame, ColorSequence.new{ColorSequenceKeypoint.new(0, Color3.fromRGB(194, 164, 164)), ColorSequenceKeypoint.new(1, Color3.fromRGB(131, 111, 111))}, 90, true)
+    Utils.applyGradient(fillFrame, theme.accentGradient, 90, true)
     Utils.applyCorner(fillFrame, 3)
 
     local loadingStatus = Utils.createInstance("TextLabel", {
         Parent = loader,
-        Name = "loadingstatus",
-        BackgroundTransparency = 1,
         Size = UDim2.new(0, 120, 0, 24),
         Position = UDim2.new(0.21667, 8, 0.83333, -24),
         Text = [[<font color="#c1a3a3">ui:</font> <font color="#999999">initializing</font><font color="#999999">...</font>]],
         TextColor3 = Color3.fromRGB(255, 255, 255),
+        BackgroundTransparency = 1,
         TextSize = 14,
         FontFace = Font.new("rbxassetid://11702779409", Enum.FontWeight.SemiBold),
         RichText = true,
@@ -132,7 +129,6 @@ function UILibrary:Init(config)
     })
     Utils.applyGradient(loadingStatus, ColorSequence.new{ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)), ColorSequenceKeypoint.new(1, Color3.fromRGB(15, 15, 15))}, 90, true)
 
-    -- Основной интерфейс (скрыт на старте)
     local mainFrame = Utils.createInstance("Frame", {
         Parent = screenGui,
         Name = "Main",
@@ -141,7 +137,7 @@ function UILibrary:Init(config)
         Position = UDim2.new(0.317, 0, 0.127, 0),
         BorderSizePixel = 0,
         BackgroundTransparency = 1,
-        Visible = false -- Скрыт до завершения загрузки
+        Visible = false 
     })
     Utils.applyCorner(mainFrame, 2)
     Utils.makeDraggable(mainFrame)
@@ -200,7 +196,8 @@ function UILibrary:Init(config)
         AutomaticSize = Enum.AutomaticSize.X,
         TextTransparency = 1
     })
-    Utils.applyGradient(bottomLabel, theme.defaultGradient, 90, true)
+    local customLabel = bottomLabel 
+    Utils.applyGradient(customLabel, theme.defaultGradient, 90, true)
 
     local watermark = Watermark.new(screenGui, config)
 
@@ -307,15 +304,15 @@ function UILibrary:Init(config)
     end
 
     local configTable = loadConfig()
-    local tabCount = 0
-    for _ in pairs(config.tree) do tabCount = tabCount + 1 end
-    local progressStep = 1 / tabCount
-    local currentProgress = 0
+    local totalTabs = #config.tree
+    local loadedTabs = 0
 
     for tabName, tabData in pairs(config.tree) do
-        loadingStatus.Text = [[<font color="#c1a3a3">ui:</font> <font color="#999999">loading ]] .. tabName .. [[</font><font color="#999999">...</font>]]
-        currentProgress = currentProgress + progressStep
-        Animation.new(fillFrame, "Size", fillFrame.Size, UDim2.new(currentProgress, 0, 1, 0), 0.5)
+        loadedTabs = loadedTabs + 1
+        loadingStatus.Text = string.format([[<font color="#c1a3a3">ui:</font> <font color="#999999">loading %s</font><font color="#999999">...</font>]], tabName)
+        local progress = loadedTabs / totalTabs
+        fillFrame.Size = UDim2.new(progress, 0, 1, 0)
+        task.wait(0.2) 
 
         local tab = Tab.new({tabbutlist = tabbutlist, tabframelist = tabframelist}, tabName)
         tabs[tabName] = tab
@@ -366,27 +363,25 @@ function UILibrary:Init(config)
                 end
             end
         end
-        task.wait(0.5) 
     end
 
-    loadingStatus.Text = [[<font color="#c1a3a3">ui:</font> <font color="#999999">complete</font>]]
-    Animation.new(fillFrame, "Size", fillFrame.Size, UDim2.new(1, 0, 1, 0), 0.3)
-    task.wait(0.3)
+    local function hideLoader()
+        local animDuration = 0.3
+        Animation.new(loader, "BackgroundTransparency", 0, 1, animDuration)
+        Animation.new(loaderLabel, "TextTransparency", 0, 1, animDuration)
+        Animation.new(welcomeText, "TextTransparency", 0, 1, animDuration)
+        Animation.new(loadingBase, "BackgroundTransparency", 0, 1, animDuration)
+        Animation.new(fillFrame, "BackgroundTransparency", 0, 1, animDuration)
+        Animation.new(loadingStatus, "TextTransparency", 0, 1, animDuration)
+        local stroke = loadingBase:FindFirstChildOfClass("UIStroke")
+        if stroke then Animation.new(stroke, "Transparency", 0, 1, animDuration) end
+        task.wait(animDuration)
+        loader:Destroy() 
+    end
 
-    local animDuration = 0.2
-    Animation.new(loader, "BackgroundTransparency", 0, 1, animDuration)
-    Animation.new(loaderLabel, "TextTransparency", 0, 1, animDuration)
-    Animation.new(welcomeText, "TextTransparency", 0, 1, animDuration)
-    Animation.new(loadingBase, "BackgroundTransparency", 0, 1, animDuration)
-    Animation.new(fillFrame, "BackgroundTransparency", 0, 1, animDuration)
-    Animation.new(loadingStatus, "TextTransparency", 0, 1, animDuration)
-    local loadingStroke = loadingBase:FindFirstChildOfClass("UIStroke")
-    if loadingStroke then Animation.new(loadingStroke, "Transparency", 0, 1, animDuration) end
-    task.wait(animDuration)
-
+    hideLoader()
     animateOpen()
     watermark:Show()
-    loader:Destroy()
 
     local function hideTabElements(tabName)
         local animDuration = 0.1
@@ -471,7 +466,7 @@ function UILibrary:Init(config)
         Animation.new(mainFrame, "BackgroundTransparency", 1, 0, animDuration)
         Animation.new(tabframelist, "BackgroundTransparency", 1, 0, animDuration)
         Animation.new(topLabel, "TextTransparency", 1, 0, animDuration)
-        Animation.new(bottomLabel, "TextTransparency", 1, 0, animDuration)
+        Animation.new(customLabel, "TextTransparency", 1, 0, animDuration)
         task.wait(animDuration)
 
         for i = 1, #tabOrder do
@@ -518,7 +513,7 @@ function UILibrary:Init(config)
         Animation.new(mainFrame, "BackgroundTransparency", 0, 1, animDuration)
         Animation.new(tabframelist, "BackgroundTransparency", 0, 1, animDuration)
         Animation.new(topLabel, "TextTransparency", 0, 1, animDuration)
-        Animation.new(bottomLabel, "TextTransparency", 0, 1, animDuration)
+        Animation.new(customLabel, "TextTransparency", 0, 1, animDuration)
         task.wait(animDuration)
         mainFrame.Visible = false
 
