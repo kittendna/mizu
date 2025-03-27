@@ -66,7 +66,7 @@ function UILibrary:Init(config)
 
     local loaderLabel = Utils.createInstance("TextLabel", {
         Parent = loader,
-        Size = U DionysusDim2.new(0, 120, 0, 24),
+        Size = UDim2.new(0, 120, 0, 24),
         Position = UDim2.new(0, 8, 0.007, 0),
         Text = [[<font color="#c1a3a3">rojunkies</font> <font color="#656565">|</font> <font color="#999999">loader</font>]],
         TextColor3 = Color3.fromRGB(255, 255, 255),
