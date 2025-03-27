@@ -3,39 +3,56 @@ local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
 local RunService = game:GetService("RunService")
 
-local Utils = loadstring(game:HttpGet("https://raw.githubusercontent.com/kittendna/mizu/main/src/modules/utils.lua"))()
-local Tab = loadstring(game:HttpGet("https://raw.githubusercontent.com/kittendna/mizu/main/src/modules/tab.lua"))()
-local Section = loadstring(game:HttpGet("https://raw.githubusercontent.com/kittendna/mizu/main/src/modules/section.lua"))()
-local Slider = loadstring(game:HttpGet("https://raw.githubusercontent.com/kittendna/mizu/main/src/modules/elements/slider.lua"))()
-local Toggle = loadstring(game:HttpGet("https://raw.githubusercontent.com/kittendna/mizu/main/src/modules/elements/toggle.lua"))()
-local Bind = loadstring(game:HttpGet("https://raw.githubusercontent.com/kittendna/mizu/main/src/modules/elements/bind.lua"))()
-local Selection = loadstring(game:HttpGet("https://raw.githubusercontent.com/kittendna/mizu/main/src/modules/elements/selection.lua"))()
-local Button = loadstring(game:HttpGet("https://raw.githubusercontent.com/kittendna/mizu/main/src/modules/elements/button.lua"))()
-local Watermark = loadstring(game:HttpGet("https://raw.githubusercontent.com/kittendna/mizu/main/src/modules/watermark.lua"))()
-
 local UILibrary = {}
 
 local defaultTheme = {
     mainFrameColor = Color3.fromRGB(31, 31, 31),
-    tabFrameColor = Color3manentRGB(25, 25, 25),
+    tabFrameColor = Color3.fromRGB(25, 25, 25),
     textColor = Color3.fromRGB(255, 255, 255),
     accentGradient = ColorSequence.new{ColorSequenceKeypoint.new(0, Color3.fromRGB(194, 164, 164)), ColorSequenceKeypoint.new(1, Color3.fromRGB(131, 111, 111))},
     defaultGradient = ColorSequence.new{ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)), ColorSequenceKeypoint.new(1, Color3.fromRGB(100, 100, 100))}
 }
 
+local Utils = loadstring(game:HttpGet("https://raw.githubusercontent.com/kittendna/mizu/main/src/modules/utils.lua"))()
+
 local Animation = {}
 function Animation.new(instance, property, start, goal, duration)
     local startTime = tick()
     local connection
-    connection = RunService.Heartbeat:Connect(function()
-        local elapsed = tick() - startTime
-        local alpha = math.min(elapsed / duration, 1)
-        instance[property] = start + (goal - start) * alpha
-        if alpha >= 1 then
-            connection:Disconnect()
-            instance[property] = goal
-        end
-    end)
+
+    if typeof(start) == "UDim2" and typeof(goal) == "UDim2" then
+        local startXScale, startXOffset = start.X.Scale, start.X.Offset
+        local startYScale, startYOffset = start.Y.Scale, start.Y.Offset
+        local goalXScale, goalXOffset = goal.X.Scale, goal.X.Offset
+        local goalYScale, goalYOffset = goal.Y.Scale, goal.Y.Offset
+
+        connection = RunService.Heartbeat:Connect(function()
+            local elapsed = tick() - startTime
+            local alpha = math.min(elapsed / duration, 1)
+
+            local newXScale = startXScale + (goalXScale - startXScale) * alpha
+            local newXOffset = startXOffset + (goalXOffset - startXOffset) * alpha
+            local newYScale = startYScale + (goalYScale - startYScale) * alpha
+            local newYOffset = startYOffset + (goalYOffset - startYOffset) * alpha
+
+            instance[property] = UDim2.new(newXScale, newXOffset, newYScale, newYOffset)
+
+            if alpha >= 1 then
+                connection:Disconnect()
+                instance[property] = goal
+            end
+        end)
+    else
+        connection = RunService.Heartbeat:Connect(function()
+            local elapsed = tick() - startTime
+            local alpha = math.min(elapsed / duration, 1)
+            instance[property] = start + (goal - start) * alpha
+            if alpha >= 1 then
+                connection:Disconnect()
+                instance[property] = goal
+            end
+        end)
+    end
     return connection
 end
 
@@ -46,158 +63,266 @@ function UILibrary:Init(config)
 
     local theme = defaultTheme
 
-    
-    local screenGui = Utils.createInstance("ScreenGui", {
-        Name = "UILibrary",
-        Parent = Players.LocalPlayer:WaitForChild("PlayerGui"),
-        ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
-        Enabled = true 
-    })
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Name = "UILibrary"
+    screenGui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui")
+    screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    screenGui.Enabled = true
 
-    local loader = Utils.createInstance("Frame", {
-        Parent = screenGui,
-        Name = "loader",
-        BackgroundColor3 = Color3.fromRGB(31, 31, 31),
-        Size = UDim2.new(0, 240, 0, 144),
-        Position = UDim2.new(0.4042, 0, 0.37671, 0),
-        BorderSizePixel = 0
-    })
-    Utils.applyCorner(loader, 2)
+    local loader = Instance.new("Frame")
+    loader.Parent = screenGui
+    loader.Name = "loader"
+    loader.BackgroundColor3 = Color3.fromRGB(31, 31, 31)
+    loader.Size = UDim2.new(0, 240, 0, 144)
+    loader.Position = UDim2.new(0.5, -120, 0.5, -72)
+    loader.BorderSizePixel = 0
+    loader.BackgroundTransparency = 1
+    Utils.makeDraggable(loader)
 
-    local loaderLabel = Utils.createInstance("TextLabel", {
-        Parent = loader,
-        Size = UDim2.new(0, 120, 0, 24),
-        Position = UDim2.new(0, 8, 0.007, 0),
-        Text = [[<font color="#c1a3a3">rojunkies</font> <font color="#656565">|</font> <font color="#999999">loader</font>]],
-        TextColor3 = Color3.fromRGB(255, 255, 255),
-        BackgroundTransparency = 1,
-        TextSize = 14,
-        FontFace = Font.new("rbxassetid://11702779409", Enum.FontWeight.SemiBold),
-        RichText = true,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        AutomaticSize = Enum.AutomaticSize.X
-    })
-    Utils.applyGradient(loaderLabel, ColorSequence.new{ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)), ColorSequenceKeypoint.new(1, Color3.fromRGB(15, 15, 15))}, 90, true)
+    local loaderCorner = Instance.new("UICorner")
+    loaderCorner.CornerRadius = UDim.new(0, 2)
+    loaderCorner.Parent = loader
 
-    local welcomeText = Utils.createInstance("TextLabel", {
-        Parent = loader,
-        Size = UDim2.new(0, 120, 0, 24),
-        Position = UDim2.new(0.21667, 8, 0.54167, -24),
-        Text = string.format([[<font color="#999999">welcome,</font> <font color="#c1a3a3">%s</font><font color="#999999">.</font>]], config.username or "user"),
-        TextColor3 = Color3.fromRGB(255, 255, 255),
-        BackgroundTransparency = 1,
-        TextSize = 14,
-        FontFace = Font.new("rbxassetid://11702779409", Enum.FontWeight.SemiBold),
-        RichText = true,
-        AutomaticSize = Enum.AutomaticSize.X
-    })
-    Utils.applyGradient(welcomeText, ColorSequence.new{ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)), ColorSequenceKeypoint.new(1, Color3.fromRGB(15, 15, 15))}, 90, true)
+    local loaderLabel = Instance.new("TextLabel")
+    loaderLabel.Parent = loader
+    loaderLabel.Size = UDim2.new(0, 120, 0, 24)
+    loaderLabel.Position = UDim2.new(0, 8, 0.007, 0)
+    loaderLabel.Text = [[<font color="#c1a3a3">rojunkies</font> <font color="#656565">|</font> <font color="#999999">loader</font>]]
+    loaderLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    loaderLabel.BackgroundTransparency = 1
+    loaderLabel.TextTransparency = 1
+    loaderLabel.TextSize = 14
+    loaderLabel.FontFace = Font.new("rbxassetid://11702779409", Enum.FontWeight.SemiBold)
+    loaderLabel.RichText = true
+    loaderLabel.TextXAlignment = Enum.TextXAlignment.Left
+    loaderLabel.AutomaticSize = Enum.AutomaticSize.X
 
-    local loadingBase = Utils.createInstance("Frame", {
-        Parent = loader,
-        Name = "loadingbase",
-        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-        Size = UDim2.new(1, -16, 0, 16),
-        Position = UDim2.new(0, 8, 1, -24),
-        BorderSizePixel = 0
-    })
-    Utils.applyGradient(loadingBase, ColorSequence.new{ColorSequenceKeypoint.new(0, Color3.fromRGB(48, 48, 48)), ColorSequenceKeypoint.new(1, Color3.fromRGB(31, 31, 31))}, 90, true)
-    Utils.applyStroke(loadingBase, Color3.fromRGB(48, 48, 48))
-    Utils.applyCorner(loadingBase, 3)
+    local loaderLabelGradient = Instance.new("UIGradient")
+    loaderLabelGradient.Rotation = 90
+    loaderLabelGradient.Color = ColorSequence.new{ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)), ColorSequenceKeypoint.new(1, Color3.fromRGB(15, 15, 15))}
+    loaderLabelGradient.Parent = loaderLabel
 
-    local fillFrame = Utils.createInstance("Frame", {
-        Parent = loadingBase,
-        Name = "fillframe",
-        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-        Size = UDim2.new(0, 0, 1, 0),
-        BorderSizePixel = 0
-    })
-    Utils.applyGradient(fillFrame, theme.accentGradient, 90, true)
-    Utils.applyCorner(fillFrame, 3)
+    local welcomeText = Instance.new("TextLabel")
+    welcomeText.Parent = loader
+    welcomeText.Size = UDim2.new(0, 120, 0, 24)
+    welcomeText.Position = UDim2.new(0.21667, 8, 0.54167, -24)
+    welcomeText.Text = string.format([[<font color="#999999">welcome,</font> <font color="#c1a3a3">%s</font><font color="#999999">.</font>]], config.username or "user")
+    welcomeText.TextColor3 = Color3.fromRGB(255, 255, 255)
+    welcomeText.BackgroundTransparency = 1
+    welcomeText.TextSize = 14
+    welcomeText.FontFace = Font.new("rbxassetid://11702779409", Enum.FontWeight.SemiBold)
+    welcomeText.RichText = true
+    welcomeText.AutomaticSize = Enum.AutomaticSize.X
+    welcomeText.TextTransparency = 1
 
-    local loadingStatus = Utils.createInstance("TextLabel", {
-        Parent = loader,
-        Size = UDim2.new(0, 120, 0, 24),
-        Position = UDim2.new(0.21667, 8, 0.83333, -24),
-        Text = [[<font color="#c1a3a3">ui:</font> <font color="#999999">initializing</font><font color="#999999">...</font>]],
-        TextColor3 = Color3.fromRGB(255, 255, 255),
-        BackgroundTransparency = 1,
-        TextSize = 14,
-        FontFace = Font.new("rbxassetid://11702779409", Enum.FontWeight.SemiBold),
-        RichText = true,
-        AutomaticSize = Enum.AutomaticSize.X
-    })
-    Utils.applyGradient(loadingStatus, ColorSequence.new{ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)), ColorSequenceKeypoint.new(1, Color3.fromRGB(15, 15, 15))}, 90, true)
+    local welcomeTextGradient = Instance.new("UIGradient")
+    welcomeTextGradient.Rotation = 90
+    welcomeTextGradient.Color = ColorSequence.new{ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)), ColorSequenceKeypoint.new(1, Color3.fromRGB(15, 15, 15))}
+    welcomeTextGradient.Parent = welcomeText
 
-    local mainFrame = Utils.createInstance("Frame", {
-        Parent = screenGui,
-        Name = "Main",
-        BackgroundColor3 = theme.mainFrameColor,
-        Size = UDim2.new(0, 480, 0, 320),
-        Position = UDim2.new(0.317, 0, 0.127, 0),
-        BorderSizePixel = 0,
-        BackgroundTransparency = 1,
-        Visible = false 
-    })
-    Utils.applyCorner(mainFrame, 2)
+    local loadingBase = Instance.new("Frame")
+    loadingBase.Parent = loader
+    loadingBase.Name = "loadingbase"
+    loadingBase.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    loadingBase.Size = UDim2.new(1, -16, 0, 16)
+    loadingBase.Position = UDim2.new(0, 8, 1, -24)
+    loadingBase.BorderSizePixel = 0
+    loadingBase.BackgroundTransparency = 1
+
+    local loadingBaseGradient = Instance.new("UIGradient")
+    loadingBaseGradient.Rotation = 90
+    loadingBaseGradient.Color = ColorSequence.new{ColorSequenceKeypoint.new(0, Color3.fromRGB(48, 48, 48)), ColorSequenceKeypoint.new(1, Color3.fromRGB(31, 31, 31))}
+    loadingBaseGradient.Parent = loadingBase
+
+    local loadingBaseStroke = Instance.new("UIStroke")
+    loadingBaseStroke.Color = Color3.fromRGB(48, 48, 48)
+    loadingBaseStroke.Parent = loadingBase
+    loadingBaseStroke.Transparency = 1
+
+    local loadingBaseCorner = Instance.new("UICorner")
+    loadingBaseCorner.CornerRadius = UDim.new(0, 3)
+    loadingBaseCorner.Parent = loadingBase
+
+    local fillFrame = Instance.new("Frame")
+    fillFrame.Parent = loadingBase
+    fillFrame.Name = "fillframe"
+    fillFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    fillFrame.Size = UDim2.new(0, 0, 1, 0)
+    fillFrame.BorderSizePixel = 0
+    fillFrame.BackgroundTransparency = 1
+
+    local fillFrameGradient = Instance.new("UIGradient")
+    fillFrameGradient.Rotation = 90
+    fillFrameGradient.Color = theme.accentGradient
+    fillFrameGradient.Parent = fillFrame
+
+    local fillFrameCorner = Instance.new("UICorner")
+    fillFrameCorner.CornerRadius = UDim.new(0, 3)
+    fillFrameCorner.Parent = fillFrame
+
+    local loadingStatus = Instance.new("TextLabel")
+    loadingStatus.Parent = loader
+    loadingStatus.Size = UDim2.new(0, 120, 0, 24)
+    loadingStatus.Position = UDim2.new(0.21667, 8, 0.83333, -24)
+    loadingStatus.Text = [[<font color="#c1a3a3">loading:</font> <font color="#999999">initializing</font><font color="#999999">...</font>]]
+    loadingStatus.TextColor3 = Color3.fromRGB(255, 255, 255)
+    loadingStatus.BackgroundTransparency = 1
+    loadingStatus.TextSize = 14
+    loadingStatus.FontFace = Font.new("rbxassetid://11702779409", Enum.FontWeight.SemiBold)
+    loadingStatus.RichText = true
+    loadingStatus.AutomaticSize = Enum.AutomaticSize.X
+    loadingStatus.TextTransparency = 1
+
+    local loadingStatusGradient = Instance.new("UIGradient")
+    loadingStatusGradient.Rotation = 90
+    loadingStatusGradient.Color = ColorSequence.new{ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)), ColorSequenceKeypoint.new(1, Color3.fromRGB(15, 15, 15))}
+    loadingStatusGradient.Parent = loadingStatus
+
+    task.wait(0.3)
+
+    local animDuration = 0.15
+    Animation.new(loader, "BackgroundTransparency", 1, 0, animDuration)
+    Animation.new(loaderLabel, "TextTransparency", 1, 0, animDuration)
+    Animation.new(welcomeText, "TextTransparency", 1, 0, animDuration)
+    Animation.new(loadingBase, "BackgroundTransparency", 1, 0, animDuration)
+    Animation.new(fillFrame, "BackgroundTransparency", 1, 0, animDuration)
+    Animation.new(loadingStatus, "TextTransparency", 1, 0, animDuration)
+    Animation.new(loadingBaseStroke, "Transparency", 1, 0, animDuration)
+    task.wait(animDuration)
+
+    local modules = {
+        {name = "Tab", url = "https://raw.githubusercontent.com/kittendna/mizu/main/src/modules/tab.lua"},
+        {name = "Section", url = "https://raw.githubusercontent.com/kittendna/mizu/main/src/modules/section.lua"},
+        {name = "Slider", url = "https://raw.githubusercontent.com/kittendna/mizu/main/src/modules/elements/slider.lua"},
+        {name = "Toggle", url = "https://raw.githubusercontent.com/kittendna/mizu/main/src/modules/elements/toggle.lua"},
+        {name = "Bind", url = "https://raw.githubusercontent.com/kittendna/mizu/main/src/modules/elements/bind.lua"},
+        {name = "Selection", url = "https://raw.githubusercontent.com/kittendna/mizu/main/src/modules/elements/selection.lua"},
+        {name = "Button", url = "https://raw.githubusercontent.com/kittendna/mizu/main/src/modules/elements/button.lua"},
+        {name = "Watermark", url = "https://raw.githubusercontent.com/kittendna/mizu/main/src/modules/watermark.lua"}
+    }
+
+    local totalModules = #modules
+    local loadedModules = 0
+    local loaded = {}
+
+    for _, module in ipairs(modules) do
+        loadingStatus.Text = string.format([[<font color="#c1a3a3">loading:</font> <font color="#999999">%s</font><font color="#999999">...</font>]], module.name)
+        loadedModules = loadedModules + 1
+        local progress = loadedModules / (totalModules + 1)
+        local startSize = fillFrame.Size
+        local goalSize = UDim2.new(progress, 0, 1, 0)
+        Animation.new(fillFrame, "Size", startSize, goalSize, 0.15)
+
+        local success, result = pcall(function()
+            return loadstring(game:HttpGet(module.url))()
+        end)
+        if success then
+            loaded[module.name] = result
+            print("Loaded module:", module.name)
+        else
+            warn("Failed to load module " .. module.name .. ": " .. result)
+        end
+        task.wait(0.3)
+    end
+
+    local Tab = loaded["Tab"]
+    local Section = loaded["Section"]
+    local Slider = loaded["Slider"]
+    local Toggle = loaded["Toggle"]
+    local Bind = loaded["Bind"]
+    local Selection = loaded["Selection"]
+    local Button = loaded["Button"]
+    local Watermark = loaded["Watermark"]
+
+    if not (Utils and Tab and Section and Slider and Toggle and Bind and Selection and Button and Watermark) then
+        warn("One or more modules failed to load. Aborting UI initialization.")
+        loader:Destroy()
+        screenGui:Destroy()
+        return nil
+    end
+
+    loadingStatus.Text = [[<font color="#c1a3a3">ui:</font> <font color="#999999">initializing</font><font color="#999999">...</font>]]
+    local startSize = fillFrame.Size
+    local goalSize = UDim2.new(loadedModules / (totalModules + 1), 0, 1, 0)
+    Animation.new(fillFrame, "Size", startSize, goalSize, 0.3)
+    task.wait(1)
+
+    local mainFrame = Instance.new("Frame")
+    mainFrame.Parent = screenGui
+    mainFrame.Name = "Main"
+    mainFrame.BackgroundColor3 = theme.mainFrameColor
+    mainFrame.Size = UDim2.new(0, 480, 0, 320)
+    mainFrame.Position = UDim2.new(0.317, 0, 0.127, 0)
+    mainFrame.BorderSizePixel = 0
+    mainFrame.BackgroundTransparency = 1
+    mainFrame.Visible = false
+
+    local mainFrameCorner = Instance.new("UICorner")
+    mainFrameCorner.CornerRadius = UDim.new(0, 2)
+    mainFrameCorner.Parent = mainFrame
+
     Utils.makeDraggable(mainFrame)
 
-    local topLabel = Utils.createInstance("TextLabel", {
-        Parent = mainFrame,
-        Size = UDim2.new(0, 120, 0, 32),
-        Position = UDim2.new(0, 8, 0, 0),
-        Text = string.format('<font color="#c1a3a3">%s</font> <font color="#656565">-></font> <font color="#999999">%s</font>', config.name or "Unnamed", config.build),
-        TextColor3 = theme.textColor,
-        BackgroundTransparency = 1,
-        TextSize = 14,
-        FontFace = Font.new("rbxassetid://11702779409", Enum.FontWeight.SemiBold),
-        RichText = true,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        AutomaticSize = Enum.AutomaticSize.X,
-        TextTransparency = 1
-    })
-    Utils.applyGradient(topLabel, theme.defaultGradient, 90, true)
+    local topLabel = Instance.new("TextLabel")
+    topLabel.Parent = mainFrame
+    topLabel.Size = UDim2.new(0, 120, 0, 32)
+    topLabel.Position = UDim2.new(0, 8, 0, 0)
+    topLabel.Text = string.format('<font color="#c1a3a3">%s</font> <font color="#656565">-></font> <font color="#999999">%s</font>', config.name or "Unnamed", config.build)
+    topLabel.TextColor3 = theme.textColor
+    topLabel.BackgroundTransparency = 1
+    topLabel.TextSize = 14
+    topLabel.FontFace = Font.new("rbxassetid://11702779409", Enum.FontWeight.SemiBold)
+    topLabel.RichText = true
+    topLabel.TextXAlignment = Enum.TextXAlignment.Left
+    topLabel.AutomaticSize = Enum.AutomaticSize.X
+    topLabel.TextTransparency = 1
 
-    local tabbutlist = Utils.createInstance("Frame", {
-        Parent = mainFrame,
-        Size = UDim2.new(0, 344, 0, 32),
-        Position = UDim2.new(0, 128, 0, 0),
-        BackgroundTransparency = 1
-    })
-    Utils.createInstance("UIListLayout", {
-        Parent = tabbutlist,
-        Padding = UDim.new(0, 8),
-        VerticalAlignment = Enum.VerticalAlignment.Center,
-        SortOrder = Enum.SortOrder.LayoutOrder,
-        FillDirection = Enum.FillDirection.Horizontal
-    })
+    local topLabelGradient = Instance.new("UIGradient")
+    topLabelGradient.Rotation = 90
+    topLabelGradient.Color = theme.defaultGradient
+    topLabelGradient.Parent = topLabel
 
-    local tabframelist = Utils.createInstance("Frame", {
-        Parent = mainFrame,
-        Name = "Frame",
-        BackgroundColor3 = theme.tabFrameColor,
-        Size = UDim2.new(0, 480, 0, 256),
-        Position = UDim2.new(0, 0, 0.1, 0),
-        BorderSizePixel = 0,
-        BackgroundTransparency = 1
-    })
+    local tabbutlist = Instance.new("Frame")
+    tabbutlist.Parent = mainFrame
+    tabbutlist.Size = UDim2.new(0, 344, 0, 32)
+    tabbutlist.Position = UDim2.new(0, 128, 0, 0)
+    tabbutlist.BackgroundTransparency = 1
 
-    local bottomLabel = Utils.createInstance("TextLabel", {
-        Parent = mainFrame,
-        Size = UDim2.new(0, 120, 0, 32),
-        Position = UDim2.new(0, 8, 1, -32),
-        Text = string.format('<font color="#c1a3a3">%s</font>  <font color="#656565">|</font>  <font color="#999999">%s</font>  <font color="#656565">|</font>  <font color="#999999">%s</font>', config.username, config.placename or "Unknown", config.otherinfo or "N/A"),
-        TextColor3 = theme.textColor,
-        BackgroundTransparency = 1,
-        TextSize = 14,
-        FontFace = Font.new("rbxassetid://11702779409", Enum.FontWeight.SemiBold),
-        RichText = true,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        AutomaticSize = Enum.AutomaticSize.X,
-        TextTransparency = 1
-    })
-    local customLabel = bottomLabel 
-    Utils.applyGradient(customLabel, theme.defaultGradient, 90, true)
+    local tabbutlistLayout = Instance.new("UIListLayout")
+    tabbutlistLayout.Parent = tabbutlist
+    tabbutlistLayout.Padding = UDim.new(0, 8)
+    tabbutlistLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+    tabbutlistLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    tabbutlistLayout.FillDirection = Enum.FillDirection.Horizontal
+
+    local tabframelist = Instance.new("Frame")
+    tabframelist.Parent = mainFrame
+    tabframelist.Name = "Frame"
+    tabframelist.BackgroundColor3 = theme.tabFrameColor
+    tabframelist.Size = UDim2.new(0, 480, 0, 256)
+    tabframelist.Position = UDim2.new(0, 0, 0.1, 0)
+    tabframelist.BorderSizePixel = 0
+    tabframelist.BackgroundTransparency = 1
+
+    local bottomLabel = Instance.new("TextLabel")
+    bottomLabel.Parent = mainFrame
+    bottomLabel.Size = UDim2.new(0, 120, 0, 32)
+    bottomLabel.Position = UDim2.new(0, 8, 1, -32)
+    bottomLabel.Text = string.format('<font color="#c1a3a3">%s</font>  <font color="#656565">|</font>  <font color="#999999">%s</font>  <font color="#656565">|</font>  <font color="#999999">%s</font>', config.username, config.placename or "Unknown", config.otherinfo or "N/A")
+    bottomLabel.TextColor3 = theme.textColor
+    bottomLabel.BackgroundTransparency = 1
+    bottomLabel.TextSize = 14
+    bottomLabel.FontFace = Font.new("rbxassetid://11702779409", Enum.FontWeight.SemiBold)
+    bottomLabel.RichText = true
+    bottomLabel.TextXAlignment = Enum.TextXAlignment.Left
+    bottomLabel.AutomaticSize = Enum.AutomaticSize.X
+    bottomLabel.TextTransparency = 1
+
+    local customLabel = bottomLabel
+    local customLabelGradient = Instance.new("UIGradient")
+    customLabelGradient.Rotation = 90
+    customLabelGradient.Color = theme.defaultGradient
+    customLabelGradient.Parent = customLabel
 
     local watermark = Watermark.new(screenGui, config)
 
@@ -304,17 +429,42 @@ function UILibrary:Init(config)
     end
 
     local configTable = loadConfig()
-    local totalTabs = #config.tree
+    local totalTabs = 0
+    for _ in pairs(config.tree) do
+        totalTabs = totalTabs + 1
+    end
     local loadedTabs = 0
 
-    for tabName, tabData in pairs(config.tree) do
+    -- Извлекаем ключи из config.tree и сортируем их
+    local tabNames = {}
+    for tabName in pairs(config.tree) do
+        table.insert(tabNames, tabName)
+    end
+    table.sort(tabNames, function(a, b)
+        -- Извлекаем числа из имен вкладок (например, "tab 1" -> 1)
+        local numA = tonumber(a:match("%d+"))
+        local numB = tonumber(b:match("%d+"))
+        return numA < numB
+    end)
+
+    -- Используем отсортированный массив для итерации
+    for _, tabName in ipairs(tabNames) do
+        local tabData = config.tree[tabName]
         loadedTabs = loadedTabs + 1
         loadingStatus.Text = string.format([[<font color="#c1a3a3">ui:</font> <font color="#999999">loading %s</font><font color="#999999">...</font>]], tabName)
-        local progress = loadedTabs / totalTabs
-        fillFrame.Size = UDim2.new(progress, 0, 1, 0)
-        task.wait(0.2) 
+        local progress = (loadedModules + (loadedTabs / totalTabs)) / (totalModules + 1)
+        local startSize = fillFrame.Size
+        local goalSize = UDim2.new(progress, 0, 1, 0)
+        Animation.new(fillFrame, "Size", startSize, goalSize, 0.3)
 
-        local tab = Tab.new({tabbutlist = tabbutlist, tabframelist = tabframelist}, tabName)
+        local success, tab = pcall(function()
+            return Tab.new({tabbutlist = tabbutlist, tabframelist = tabframelist}, tabName)
+        end)
+        if not success then
+            warn("Failed to create tab " .. tabName .. ": " .. tab)
+            continue
+        end
+
         tabs[tabName] = tab
         table.insert(tabOrder, tabName)
         tab.button.BackgroundTransparency = 1
@@ -363,6 +513,7 @@ function UILibrary:Init(config)
                 end
             end
         end
+        task.wait(0.3)
     end
 
     local function hideLoader()
@@ -373,15 +524,12 @@ function UILibrary:Init(config)
         Animation.new(loadingBase, "BackgroundTransparency", 0, 1, animDuration)
         Animation.new(fillFrame, "BackgroundTransparency", 0, 1, animDuration)
         Animation.new(loadingStatus, "TextTransparency", 0, 1, animDuration)
-        local stroke = loadingBase:FindFirstChildOfClass("UIStroke")
-        if stroke then Animation.new(stroke, "Transparency", 0, 1, animDuration) end
+        Animation.new(loadingBaseStroke, "Transparency", 0, 1, animDuration)
         task.wait(animDuration)
-        loader:Destroy() 
+        loader:Destroy()
     end
 
     hideLoader()
-    animateOpen()
-    watermark:Show()
 
     local function hideTabElements(tabName)
         local animDuration = 0.1
@@ -549,6 +697,8 @@ function UILibrary:Init(config)
         screenGui:Destroy()
     end
 
+    animateOpen()
+    watermark:Show()
     return window
 end
 
