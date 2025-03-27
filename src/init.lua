@@ -50,9 +50,89 @@ function UILibrary:Init(config)
         Name = "UILibrary",
         Parent = Players.LocalPlayer:WaitForChild("PlayerGui"),
         ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
-        Enabled = false
+        Enabled = true -- Включаем сразу для отображения лоадера
     })
 
+    -- Создание лоадера
+    local loader = Utils.createInstance("Frame", {
+        Parent = screenGui,
+        Name = "loader",
+        BackgroundColor3 = Color3.fromRGB(31, 31, 31),
+        Size = UDim2.new(0, 240, 0, 144),
+        Position = UDim2.new(0.4042, 0, 0.37671, 0),
+        BorderSizePixel = 0
+    })
+    Utils.applyCorner(loader, 2)
+
+    local loaderLabel = Utils.createInstance("TextLabel", {
+        Parent = loader,
+        Name = "label",
+        BackgroundTransparency = 1,
+        Size = UDim2.new(0, 120, 0, 24),
+        Position = UDim2.new(0, 8, 0.007, 0),
+        Text = [[<font color="#c1a3a3">rojunkies</font> <font color="#656565">|</font> <font color="#999999">loader</font>]],
+        TextColor3 = Color3.fromRGB(255, 255, 255),
+        TextSize = 14,
+        FontFace = Font.new("rbxassetid://11702779409", Enum.FontWeight.SemiBold),
+        RichText = true,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        AutomaticSize = Enum.AutomaticSize.X
+    })
+    Utils.applyGradient(loaderLabel, ColorSequence.new{ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)), ColorSequenceKeypoint.new(1, Color3.fromRGB(15, 15, 15))}, 90, true)
+
+    local welcomeText = Utils.createInstance("TextLabel", {
+        Parent = loader,
+        Name = "welcometext",
+        BackgroundTransparency = 1,
+        Size = UDim2.new(0, 120, 0, 24),
+        Position = UDim2.new(0.21667, 8, 0.54167, -24),
+        Text = [[<font color="#999999">welcome,</font> <font color="#c1a3a3">]] .. config.username .. [[</font><font color="#999999">.</font>]],
+        TextColor3 = Color3.fromRGB(255, 255, 255),
+        TextSize = 14,
+        FontFace = Font.new("rbxassetid://11702779409", Enum.FontWeight.SemiBold),
+        RichText = true,
+        AutomaticSize = Enum.AutomaticSize.X
+    })
+    Utils.applyGradient(welcomeText, ColorSequence.new{ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)), ColorSequenceKeypoint.new(1, Color3.fromRGB(15, 15, 15))}, 90, true)
+
+    local loadingBase = Utils.createInstance("Frame", {
+        Parent = loader,
+        Name = "loadingbase",
+        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+        Size = UDim2.new(1, -16, 0, 16),
+        Position = UDim2.new(0, 8, 1, -24),
+        BorderSizePixel = 0
+    })
+    Utils.applyGradient(loadingBase, ColorSequence.new{ColorSequenceKeypoint.new(0, Color3.fromRGB(48, 48, 48)), ColorSequenceKeypoint.new(1, Color3.fromRGB(31, 31, 31))}, 90, true)
+    Utils.applyStroke(loadingBase, Color3.fromRGB(48, 48, 48))
+    Utils.applyCorner(loadingBase, 3)
+
+    local fillFrame = Utils.createInstance("Frame", {
+        Parent = loadingBase,
+        Name = "fillframe",
+        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+        Size = UDim2.new(0, 0, 1, 0), -- Начальный размер 0
+        BorderSizePixel = 0
+    })
+    Utils.applyGradient(fillFrame, ColorSequence.new{ColorSequenceKeypoint.new(0, Color3.fromRGB(194, 164, 164)), ColorSequenceKeypoint.new(1, Color3.fromRGB(131, 111, 111))}, 90, true)
+    Utils.applyCorner(fillFrame, 3)
+
+    local loadingStatus = Utils.createInstance("TextLabel", {
+        Parent = loader,
+        Name = "loadingstatus",
+        BackgroundTransparency = 1,
+        Size = UDim2.new(0, 120, 0, 24),
+        Position = UDim2.new(0.21667, 8, 0.83333, -24),
+        Text = [[<font color="#c1a3a3">ui:</font> <font color="#999999">initializing</font><font color="#999999">...</font>]],
+        TextColor3 = Color3.fromRGB(255, 255, 255),
+        TextSize = 14,
+        FontFace = Font.new("rbxassetid://11702779409", Enum.FontWeight.SemiBold),
+        RichText = true,
+        AutomaticSize = Enum.AutomaticSize.X
+    })
+    Utils.applyGradient(loadingStatus, ColorSequence.new{ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)), ColorSequenceKeypoint.new(1, Color3.fromRGB(15, 15, 15))}, 90, true)
+
+    -- Основной интерфейс (скрыт на старте)
     local mainFrame = Utils.createInstance("Frame", {
         Parent = screenGui,
         Name = "Main",
@@ -60,7 +140,8 @@ function UILibrary:Init(config)
         Size = UDim2.new(0, 480, 0, 320),
         Position = UDim2.new(0.317, 0, 0.127, 0),
         BorderSizePixel = 0,
-        BackgroundTransparency = 1
+        BackgroundTransparency = 1,
+        Visible = false -- Скрыт до завершения загрузки
     })
     Utils.applyCorner(mainFrame, 2)
     Utils.makeDraggable(mainFrame)
@@ -226,7 +307,16 @@ function UILibrary:Init(config)
     end
 
     local configTable = loadConfig()
+    local tabCount = 0
+    for _ in pairs(config.tree) do tabCount = tabCount + 1 end
+    local progressStep = 1 / tabCount
+    local currentProgress = 0
+
     for tabName, tabData in pairs(config.tree) do
+        loadingStatus.Text = [[<font color="#c1a3a3">ui:</font> <font color="#999999">loading ]] .. tabName .. [[</font><font color="#999999">...</font>]]
+        currentProgress = currentProgress + progressStep
+        Animation.new(fillFrame, "Size", fillFrame.Size, UDim2.new(currentProgress, 0, 1, 0), 0.5)
+
         local tab = Tab.new({tabbutlist = tabbutlist, tabframelist = tabframelist}, tabName)
         tabs[tabName] = tab
         table.insert(tabOrder, tabName)
@@ -276,7 +366,27 @@ function UILibrary:Init(config)
                 end
             end
         end
-    end 
+        task.wait(0.5) 
+    end
+
+    loadingStatus.Text = [[<font color="#c1a3a3">ui:</font> <font color="#999999">complete</font>]]
+    Animation.new(fillFrame, "Size", fillFrame.Size, UDim2.new(1, 0, 1, 0), 0.3)
+    task.wait(0.3)
+
+    local animDuration = 0.2
+    Animation.new(loader, "BackgroundTransparency", 0, 1, animDuration)
+    Animation.new(loaderLabel, "TextTransparency", 0, 1, animDuration)
+    Animation.new(welcomeText, "TextTransparency", 0, 1, animDuration)
+    Animation.new(loadingBase, "BackgroundTransparency", 0, 1, animDuration)
+    Animation.new(fillFrame, "BackgroundTransparency", 0, 1, animDuration)
+    Animation.new(loadingStatus, "TextTransparency", 0, 1, animDuration)
+    local loadingStroke = loadingBase:FindFirstChildOfClass("UIStroke")
+    if loadingStroke then Animation.new(loadingStroke, "Transparency", 0, 1, animDuration) end
+    task.wait(animDuration)
+
+    animateOpen()
+    watermark:Show()
+    loader:Destroy()
 
     local function hideTabElements(tabName)
         local animDuration = 0.1
@@ -444,8 +554,6 @@ function UILibrary:Init(config)
         screenGui:Destroy()
     end
 
-    animateOpen()
-    watermark:Show()
     return window
 end
 
