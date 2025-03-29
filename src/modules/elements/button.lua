@@ -22,7 +22,7 @@ local function animateProperty(instance, property, start, goal, duration)
 	end)
 end
 
-function Button.new(parent, data)
+function Button.new(parent, data, context)
 	assert(type(data.name) == "string", "Button name must be a string")
 	assert(type(data.text) == "string", "Button text must be a string")
 
@@ -61,12 +61,13 @@ function Button.new(parent, data)
 	Utils.applyCorner(actionButton, 4)
 
 	local callback = data.callback or function() end
+	local windowContext = context
 
 	actionButton.MouseButton1Click:Connect(function()
 		actionButton.TextColor3 = Color3.fromRGB(194, 164, 164)
 		task.wait(0.1)
 		animateProperty(actionButton, "TextColor3", Color3.fromRGB(194, 164, 164), Color3.fromRGB(154, 154, 154), 0.1)
-		callback()
+		callback(windowContext)
 	end)
 
 	return {
