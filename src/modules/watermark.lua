@@ -79,14 +79,18 @@ function Watermark.new(parent, config)
     return {
         frame = watermarkFrame,
         Show = function(self)
-            local duration = 0.1
-            animateProperty(watermarkFrame, "BackgroundTransparency", 1, 0, duration)
-            animateProperty(label, "TextTransparency", 1, 0, duration)
+            if watermarkFrame.BackgroundTransparency ~= 0 then
+				local duration = 0.1
+            	animateProperty(watermarkFrame, "BackgroundTransparency", 1, 0, duration)
+            	animateProperty(label, "TextTransparency", 1, 0, duration)
+			end
         end,
         Hide = function(self)
-            local duration = 0.1
-            animateProperty(watermarkFrame, "BackgroundTransparency", 0, 1, duration)
-            animateProperty(label, "TextTransparency", 0, 1, duration)
+			if watermarkFrame.BackgroundTransparency ~= 1 then
+				local duration = 0.1
+				animateProperty(watermarkFrame, "BackgroundTransparency", 0, 1, duration)
+				animateProperty(label, "TextTransparency", 0, 1, duration)
+			end
         end,
         Destroy = function(self)
             if connection then
