@@ -401,17 +401,6 @@ function UILibrary:Init(config)
                 section.addElement(element.frame)
                 window[tabName][sectionName][elementData.name] = element
                 table.insert(elements, {element = element, tab = tabName})
-
-                local savedValue = configTable[tabName] and configTable[tabName][sectionName] and configTable[tabName][sectionName][elementData.name]
-                if savedValue ~= nil and elementType ~= "button" then
-                    pcall(function()
-                        if elementType == "bind" then
-                            element:SetValue(Enum.KeyCode[savedValue])
-                        else
-                            element:SetValue(savedValue)
-                        end
-                    end)
-                end
             end
         end
         task.wait(0.3)
