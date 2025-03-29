@@ -16,7 +16,7 @@ local function animateProperty(instance, property, start, goal, duration)
 	end)
 end
 
-function Selection.new(parent, data, Animation)
+function Selection.new(parent, data, context)
 	assert(type(data.name) == "string", "Selection name must be a string")
 	assert(type(data.variants) == "table" and #data.variants > 0, "Variants must be a non-empty table")
 	assert(type(data.multiSelect) == "boolean", "multiSelect must be a boolean")
@@ -72,6 +72,7 @@ function Selection.new(parent, data, Animation)
 	local selectedVariants = {}
 	local variantButtons = {}
 	local callback = data.callback or function(value) selected = value end
+	local windowContext = context
 
 	for _, variantName in ipairs(data.variants) do
 		local isActive = false
@@ -123,7 +124,7 @@ function Selection.new(parent, data, Animation)
 					variantButtons[variantName].active = true
 				end
 			end
-			callback(selectedVariants)
+			callback(selectedVariants,context)
 		end)
 	end
 
@@ -146,7 +147,7 @@ function Selection.new(parent, data, Animation)
 					variantButtons[value].active = true
 				end
 			end
-			callback(selectedVariants)
+			callback(selectedVariants,context)
 		end,
 		Show = function(self)
 			local duration = 0.1
