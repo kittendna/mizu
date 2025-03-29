@@ -392,7 +392,7 @@ function UILibrary:Init(config)
                 elseif elementType == "selection" then
                     element = Selection.new(section.elementList, elementData, window)
                 elseif elementType == "button" then
-                    element = Button.new(section.elementList, elementData)
+                    element = Button.new(section.elementList, elementData, window)
                 else
                     warn("Unknown element type: " .. tostring(elementData.type))
                     continue
@@ -579,16 +579,91 @@ function UILibrary:Init(config)
         end
     end
 
-    window.SaveConfig = saveConfig
-    window.LoadConfig = loadConfig
     window.Destroy = function()
         for _, conn in pairs(connections) do conn:Disconnect() end
         watermark:Destroy()
         screenGui:Destroy()
     end
 
+    window.SaveConfig = function(self, configName)
+        local configData = {}
+        for tabName, tab in pairs(self) do
+            if type(tab) == "table" and tabName ~= "watermark" then
+                configData[tabName] = {}
+                for sectionName, section in pairs(tab) do
+                    if type(section) == "table" then
+                        configData[tabName][sectionName] = {}
+                        for elementName, element in pairs(section) do
+                            local value
+                            if element.type == "toggle" then
+                                value = element:GetValue()
+                            elseif element.type == "slider" then
+                                value = element:GetValue()
+                            elseif element.type == "selection" then
+                                value = element:GetValue()
+                            elseif element.type == "bind" then
+                                local key = element:GetValue()
+                                value = key and key.Name or "None"
+                            end
+                            configData[tabName][sectionName][elementName] = value
+                        end
+                    end
+                end
+            end
+        end
+        local jsonData = HttpService:JSONEncode(configData)
+        writefile("mizu/" .. configName .. ".json", jsonData)
+    end
+
+    window.LoadConfig = function(self, configName)
+        if not isfile("mizu/" .. configName .. ".json") then
+            warn("Config file not found: " .. configName)
+            return
+        end
+        local jsonData = readfile("mizu/" .. configName .. ".json")
+        local configData = HttpService:JSONDecode(jsonData)
+        for tabName, tabData in pairs(configData) do
+            if self[tabName] then
+                for sectionName, sectionData in pairs(tabData) do
+                    if self[tabName][sectionName] then
+                        for elementName, value in pairs(sectionData) do
+                            local element = self[tabName][sectionName][elementName]
+                            if element then
+                                if element.type == "toggle" then
+                                    element:SetValue(value)
+                                elseif element.type == "slider" then
+                                    element:SetValue(value)
+                                elseif element.type == "selection" then
+                                    element:SetValue(value)
+                                elseif element.type == "bind" then
+                                    local key = value ~= "None" and Enum.KeyCode[value] or nil
+                                    element:SetValue(key)
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    if not isfolder("mizu") then
+        makefolder("mizu")
+    end
+
+    local configFiles = {"default.json", "legit.json", "rage.json", "secret.json"}
+
+    for _, file in ipairs(configFiles) do
+        local filePath = "mizu/" .. file
+        if not isfile(filePath) then
+            writefile(filePath, "{}")
+        end
+    end
+
     animateOpen()
     watermark:Show()
+    window:LoadConfig("default") 
     return window
 end
+
 return UILibrary
