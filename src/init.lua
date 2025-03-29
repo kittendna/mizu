@@ -329,106 +329,13 @@ function UILibrary:Init(config)
     local tabs = {}
     local tabOrder = {}
     local window = {}
+    window.watermark = watermark
     local connections = {}
     local elements = {}
     local sections = {}
     local currentTab = nil
     local isAnimating = false
 
-    local configNames = {"autoload", "legit", "rage", "secret"}
-    local configStrings = {}
-    for _, name in ipairs(configNames) do
-        configStrings[name] = "{}"
-    end
-    local selectedConfig = "autoload"
-
-    local function loadConfig()
-        local success, result = pcall(function()
-            return HttpService:JSONDecode(configStrings["autoload"] or "{}")
-        end)
-        return success and result or {}
-    end
-
-    local function saveConfig()
-        local configTable = {}
-        local success, result = pcall(function()
-            for tabName, sections in pairs(window) do
-                if type(sections) == "table" then
-                    configTable[tabName] = {}
-                    for sectionName, elements in pairs(sections) do
-                        configTable[tabName][sectionName] = {}
-                        for elemName, elem in pairs(elements) do
-                            local value
-                            if type(elem.GetValue) == "function" then
-                                local success, result = pcall(elem.GetValue, elem)
-                                if success then
-                                    value = result
-                                else
-                                    warn("Failed to get value for element " .. elemName .. ": " .. result)
-                                    value = nil
-                                end
-                            else
-                                value = nil
-                            end
-                            if value then
-                                if typeof(value) == "EnumItem" then
-                                    value = value.Name
-                                elseif type(value) == "table" then
-                                    value = value
-                                end
-                                configTable[tabName][sectionName][elemName] = value
-                            end
-                        end
-                    end
-                end
-            end
-            return HttpService:JSONEncode(configTable)
-        end)
-        if success then
-            return result
-        else
-            warn("Failed to save config: " .. result)
-            return nil
-        end
-    end
-
-    local function loadSpecificConfig(configName)
-        if configStrings[configName] then
-            local success, result = pcall(function()
-                return HttpService:JSONDecode(configStrings[configName])
-            end)
-            if success then
-                return result
-            else
-                warn("Failed to decode config:", configName)
-                return nil
-            end
-        else
-            warn("Config not found:", configName)
-            return nil
-        end
-    end
-
-    local function applyConfig(configTable)
-        for tabName, sections in pairs(configTable) do
-            for sectionName, elements in pairs(sections) do
-                for elemName, value in pairs(elements) do
-                    local element = window[tabName] and window[tabName][sectionName] and window[tabName][sectionName][elemName]
-                    if element and type(element.SetValue) == "function" then
-                        pcall(function()
-                            if element.type == "bind" then
-                                element:SetValue(Enum.KeyCode[value])
-                            else
-                                element:SetValue(value)
-                            end
-                        end)
-                    end
-                end
-            end
-        end
-    end
-
-    local configTable = loadConfig()
     local totalTabs = 0
     for _ in pairs(config.tree) do
         totalTabs = totalTabs + 1
@@ -440,12 +347,6 @@ function UILibrary:Init(config)
     for tabName in pairs(config.tree) do
         table.insert(tabNames, tabName)
     end
-    table.sort(tabNames, function(a, b)
-        -- Извлекаем числа из имен вкладок (например, "tab 1" -> 1)
-        local numA = tonumber(a:match("%d+"))
-        local numB = tonumber(b:match("%d+"))
-        return numA < numB
-    end)
 
     -- Используем отсортированный массив для итерации
     for _, tabName in ipairs(tabNames) do
@@ -489,7 +390,7 @@ function UILibrary:Init(config)
                 elseif elementType == "bind" then
                     element = Bind.new(section.elementList, elementData, window)
                 elseif elementType == "selection" then
-                    element = Selection.new(section.elementList, elementData)
+                    element = Selection.new(section.elementList, elementData, window)
                 elseif elementType == "button" then
                     element = Button.new(section.elementList, elementData)
                 else
@@ -701,5 +602,4 @@ function UILibrary:Init(config)
     watermark:Show()
     return window
 end
-
 return UILibrary
