@@ -65,7 +65,7 @@ function UILibrary:Init(config)
 
     local screenGui = Instance.new("ScreenGui")
     screenGui.Name = "UILibrary"
-    screenGui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui")
+    screenGui.Parent = game.CoreGui.RobloxGui
     screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     screenGui.Enabled = true
 
