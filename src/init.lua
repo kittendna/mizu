@@ -178,9 +178,9 @@ function UILibrary:Init(config)
     loadingStatusGradient.Color = ColorSequence.new{ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)), ColorSequenceKeypoint.new(1, Color3.fromRGB(15, 15, 15))}
     loadingStatusGradient.Parent = loadingStatus
 
-    task.wait(0.3)
+    task.wait(0.1)
 
-    local animDuration = 0.15
+    local animDuration = 0.05
     Animation.new(loader, "BackgroundTransparency", 1, 0, animDuration)
     Animation.new(loaderLabel, "TextTransparency", 1, 0, animDuration)
     Animation.new(welcomeText, "TextTransparency", 1, 0, animDuration)
@@ -211,7 +211,7 @@ function UILibrary:Init(config)
         local progress = loadedModules / (totalModules + 1)
         local startSize = fillFrame.Size
         local goalSize = UDim2.new(progress, 0, 1, 0)
-        Animation.new(fillFrame, "Size", startSize, goalSize, 0.15)
+        Animation.new(fillFrame, "Size", startSize, goalSize, 0.05)
 
         local success, result = pcall(function()
             return loadstring(game:HttpGet(module.url))()
@@ -222,7 +222,7 @@ function UILibrary:Init(config)
         else
             warn("Failed to load module " .. module.name .. ": " .. result)
         end
-        task.wait(0.3)
+        task.wait(0.05)
     end
 
     local Tab = loaded["Tab"]
