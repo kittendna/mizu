@@ -69,8 +69,8 @@ function Watermark.new(parent, config)
             local build = config.build or "Unknown"
             local placename = config.placename or "Unknown"
             label.Text = string.format(
-                '<font color="#c1a3a3">mizu</font> <font color="#656565">|</font> <font color="#999999">beta</font> <font color="#c1a3a3">-></font> <font color="#999999">%s</font> <font color="#656565">/</font> <font color="#999999">%s</font> <font color="#656565">/</font> <font color="#999999">fps: %d</font> <font color="#656565">/</font> <font color="#999999">%s</font>',
-                username, placename, fps, time
+                '<font color="#c1a3a3">mizu</font> <font color="#656565">|</font> <font color="#999999">%s</font> <font color="#c1a3a3">-></font> <font color="#999999">%s</font> <font color="#656565">/</font> <font color="#999999">%s</font> <font color="#656565">/</font> <font color="#999999">fps: %d</font> <font color="#656565">/</font> <font color="#999999">%s</font>',
+                build, username, placename, fps, time
             )
             lastUpdate = currentTime
         end
