@@ -105,8 +105,8 @@ function Tab.new(parent, name)
 		deselect = function()
 			tabContent.Visible = false
 			animateColors(
-				Color3.fromRGB(139, 117, 117),
-				Color3.fromRGB(34, 34, 34),
+				Color3.fromRGB(193, 163, 163),
+				Color3.fromRGB(47, 47, 47),
 				true,
 				ColorSequence.new{ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)), ColorSequenceKeypoint.new(1, Color3.fromRGB(150, 150, 150))}
 			)
