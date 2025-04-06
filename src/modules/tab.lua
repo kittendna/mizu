@@ -25,7 +25,7 @@ function Tab.new(parent, name)
 		Size = UDim2.new(0, 0, 0, 18),
 		AutomaticSize = Enum.AutomaticSize.X,
 		BackgroundColor3 = Color3.fromRGB(34, 34, 34),
-		TextColor3 = Color3.fromRGB(107, 107, 107),
+		TextColor3 = Color3.fromRGB(139, 117, 117),
 		FontFace = Font.new("rbxassetid://11702779409", Enum.FontWeight.SemiBold),
 		TextSize = 14,
 		BackgroundTransparency = 1,
@@ -96,16 +96,16 @@ function Tab.new(parent, name)
 		select = function()
 			tabContent.Visible = true
 			animateColors(
-				Color3.fromRGB(193, 163, 163),
-				Color3.fromRGB(42, 42, 42),
+				Color3.fromRGB(47, 47, 47),
+				Color3.fromRGB(255, 255, 255),
 				true,
-				ColorSequence.new{ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)), ColorSequenceKeypoint.new(1, Color3.fromRGB(150, 150, 150))}
+				ColorSequence.new{ColorSequenceKeypoint.new(0, Color3.fromRGB(193,163,163)), ColorSequenceKeypoint.new(1, Color3.fromRGB(130, 110, 110))}
 			)
 		end,
 		deselect = function()
 			tabContent.Visible = false
 			animateColors(
-				Color3.fromRGB(107, 107, 107),
+				Color3.fromRGB(139, 117, 117),
 				Color3.fromRGB(34, 34, 34),
 				true,
 				ColorSequence.new{ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)), ColorSequenceKeypoint.new(1, Color3.fromRGB(150, 150, 150))}
